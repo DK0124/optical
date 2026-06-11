@@ -64,3 +64,49 @@ export interface GlassesOrderInput {
   };
   note?: string | null;
 }
+
+export interface BvshopCustomerListItem {
+  id: number | string;
+  fullName: string;
+  dealerCode?: string | null;
+  phone?: string | null;
+  email?: string | null;
+  address?: string | null;
+  city?: string | null;
+}
+
+export interface BvshopListMeta {
+  current_page: number;
+  last_page: number;
+  per_page: number;
+  total: number;
+}
+
+export interface BvshopPayment {
+  id: number;
+  name: string;
+}
+
+export interface BvshopLogistic {
+  id: number;
+  name: string;
+}
+
+export interface CreateBvshopOrderInput {
+  paymentId: number;
+  logisticId: number;
+  cvs?: {
+    storeName: string;
+    storeNum: string;
+  };
+  deposit?: number;
+  confirm: true;
+}
+
+export interface BvshopOrderResult {
+  id: number;
+  uid: string;
+  orderStatus?: string | null;
+  paymentStatus?: string | null;
+  checkoutUrl?: string | null;
+}

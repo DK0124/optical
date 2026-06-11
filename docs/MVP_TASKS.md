@@ -45,9 +45,10 @@
 ## Phase 6：BVSHOP 訂單
 
 - [x] 建單 payload preview（`GET .../bvshop-payload-preview`）
-- [x] 確認 paymentId/logisticId/cvs（取自環境變數 `DEFAULT_*`）
+- [x] 支援付款/物流下拉（`GET /api/bvshop/payments`、`GET /api/bvshop/logistics`）
+- [x] 建單前確認 paymentId/logisticId/cvs（由前端選擇並傳入）
 - [x] `POST /api/glasses-orders/:id/create-bvshop-order`（`ENABLE_REAL_ORDER=false` 預設回 403）
-- [ ] 回寫 `bvshop_order_id` / `bvshop_order_uid`（已備妥邏輯，待 `ENABLE_REAL_ORDER=true` 後啟用）
+- [x] 回寫 `bvshop_order_id` / `bvshop_order_uid`
 
 ## Phase 7：前端
 
@@ -61,9 +62,11 @@
 - [x] **驗光詳情頁**（`/optometry/:id`，可編輯，**新增**）
 - [x] 建立配鏡頁（`/optometry/:id/create-glasses-order`，鍍膜 chips、金額自動加總）
 - [x] 配鏡詳情頁（`/glasses-orders/:id`，複製備註 Toast、payload 預覽可展開）
-- [x] 真建單按鈕預設 disabled 標「第二階段功能」
+- [x] 真建單流程（付款/物流選擇、預覽、確認建立、403 友善提示）
+- [x] 列印驗光單與配鏡單（`/print/optometry/:id`、`/print/glasses-order/:id`）
+- [x] 介面視覺升級（中性色系、SVG 線性 icon、表格與版面精修）
 
-## 尚未完成（第二階段）
+## 已知限制（第二階段）
 
-- [ ] 真建單（`ENABLE_REAL_ORDER=true`）：需確認正式 `paymentId`、`logisticId`、`cvs` 值
-- [ ] 回寫 `bvshop_order_id` / `bvshop_order_uid` 至配鏡詳情頁顯示
+- [x] 姓名搜尋僅限本系統已同步之顧客快照（BVSHOP API 不支援姓名查詢參數）
+- [x] 真建單需 `ENABLE_REAL_ORDER=true`，建議先於 dev 環境驗證 payment/logistic/cvs

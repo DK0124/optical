@@ -4,10 +4,11 @@ import type { Env, AppVariables } from "../types";
 import { bvshopClient } from "../server/bvshopClient";
 import { nowIso } from "../server/id";
 import { logAudit } from "../server/audit";
+import type { BvshopCustomerListItem, BvshopListMeta } from "@optical/shared";
 
 export const customerRoutes = new Hono<{ Bindings: Env; Variables: AppVariables }>();
 
-async function upsertCustomerSnapshot(c: any, customer: any) {
+async function upsertCustomerSnapshot(c: any, customer: BvshopCustomerListItem) {
   const companyId = c.get("companyId");
   const now = nowIso();
   const id = `${companyId}:${customer.id}`;
@@ -47,31 +48,110 @@ async function upsertCustomerSnapshot(c: any, customer: any) {
   return id;
 }
 
+const EMPTY_META: BvshopListMeta = {
+  current_page: 1,
+  last_page: 1,
+  per_page: 20,
+  total: 0
+};
+
+function inferSearchType(q: string, requestedType: string) {
+  if (requestedType === "phone" || requestedType === "email" || requestedType === "name") return requestedType;
+  if (/^\d+$/.test(q)) return "phone";
+  if (q.includes("@")) return "email";
+  return "name";
+}
+
+async function queryLocalName(c: any, q: string) {
+  const companyId = c.get("companyId");
+  const rows = await c.env.DB.prepare(
+    `SELECT bvshop_customer_id AS id, full_name AS fullName, dealer_code AS dealerCode, phone, email, city, address
+      FROM customers_snapshot
+      WHERE company_id = ? AND full_name LIKE ?
+      ORDER BY updated_at DESC
+      LIMIT 100`
+  )
+    .bind(companyId, `%${q}%`)
+    .all();
+
+  return (rows.results || []) as BvshopCustomerListItem[];
+}
+
 customerRoutes.get("/customers/search", async (c) => {
   const q = c.req.query("q")?.trim();
+  const type = inferSearchType(q || "", (c.req.query("type") || "auto").trim());
+  const page = Number(c.req.query("page") || 1);
+  const limit = Math.min(Number(c.req.query("limit") || 20), 100);
 
   if (!q) {
-    return c.json({ data: [], message: "請輸入 BVSHOP 顧客 ID。MVP 先支援用 ID 查詢。" });
+    return c.json({ data: [], source: "none", meta: EMPTY_META, message: "請輸入搜尋關鍵字。" });
   }
 
   try {
-    // MVP：先假設 q 是 BVSHOP 顧客 ID。
-    const res = await bvshopClient.getCustomer(c.env, q);
-    if (!res.data) {
-      return c.json({ data: [], message: "查無顧客" });
+    if (type === "name") {
+      const data = await queryLocalName(c, q);
+      return c.json({
+        data,
+        source: "local",
+        meta: { ...EMPTY_META, total: data.length, per_page: data.length || 20 },
+        message: "BVSHOP 不支援姓名搜尋，以下為本系統已存顧客。"
+      });
     }
-    await upsertCustomerSnapshot(c, res.data);
-    return c.json({ data: [res.data], mode: "id" });
+
+    const params =
+      type === "email"
+        ? { email: q, page, limit }
+        : { phone: q, page, limit };
+
+    const listRes = await bvshopClient.listCustomers(c.env, params);
+    const customers = listRes.data || [];
+    for (const item of customers) {
+      await upsertCustomerSnapshot(c, item);
+    }
+
+    if (customers.length > 0) {
+      return c.json({
+        data: customers,
+        source: "bvshop",
+        meta: listRes.meta || EMPTY_META,
+        message: `共找到 ${customers.length} 筆顧客資料。`
+      });
+    }
+
+    // 保留純數字輸入當 ID 的相容性
+    if (/^\d+$/.test(q)) {
+      try {
+        const byIdRes = await bvshopClient.getCustomer(c.env, q);
+        if (byIdRes.data) {
+          await upsertCustomerSnapshot(c, byIdRes.data);
+          return c.json({
+            data: [byIdRes.data],
+            source: "bvshop",
+            meta: { ...EMPTY_META, total: 1, per_page: 1 },
+            message: "電話查無結果，已改用顧客 ID 查詢。"
+          });
+        }
+      } catch {
+        // fallback 失敗時沿用空結果
+      }
+    }
+
+    return c.json({
+      data: [],
+      source: "bvshop",
+      meta: listRes.meta || EMPTY_META,
+      message: "查無顧客資料。"
+    });
   } catch (err) {
     const e = err as Error & { status?: number };
     if (e.status === 404) {
-      return c.json({ data: [], message: "查無此顧客" });
+      return c.json({ data: [], source: "bvshop", meta: EMPTY_META, message: "查無此顧客。" });
     }
     // BVSHOP 未設定時給友善訊息
     if (e.message?.includes("not configured")) {
-      return c.json({ data: [], message: "BVSHOP API 尚未設定，無法查詢顧客。" });
+      return c.json({ data: [], source: "bvshop", meta: EMPTY_META, message: "BVSHOP API 尚未設定，無法查詢顧客。" });
     }
-    return c.json({ data: [], message: e.message || "查詢失敗，請稍後再試。" });
+    return c.json({ data: [], source: "bvshop", meta: EMPTY_META, message: e.message || "查詢失敗，請稍後再試。" });
   }
 });
 

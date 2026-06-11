@@ -64,6 +64,7 @@ cp apps/api/wrangler.toml.example apps/api/wrangler.toml
 ```
 
 > D1 database_id 本機開發不需填入真實 ID，`wrangler dev` 會自動使用本機 SQLite。
+> `wrangler.toml.example` 已預設 `migrations_dir = "../../migrations"`，可正確指向根目錄 migration。
 
 ---
 
@@ -107,7 +108,8 @@ pnpm dev:web
 | 建立配鏡紀錄 | ❌ | 只寫本機 D1 |
 | 檢視訂單備註 | ❌ | 從本機 D1 產生 |
 | Payload 預覽 | ❌ | 從本機 D1 產生 |
-| 查詢 BVSHOP 顧客 | ✅ | 需真 Token |
+| 查詢 BVSHOP 顧客（電話/Email） | ✅ | 需真 Token |
+| 查詢顧客（姓名） | ❌ | 走本機 `customers_snapshot` 快照 |
 | 建立 BVSHOP 顧客 | ✅ | 需真 Token |
 | 真建單（第二階段）| ✅ | 需真 Token + `ENABLE_REAL_ORDER=true` |
 

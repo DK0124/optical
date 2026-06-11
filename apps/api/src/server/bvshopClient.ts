@@ -1,4 +1,11 @@
 import type { Env } from "../types";
+import type {
+  BvshopCustomerListItem,
+  BvshopListMeta,
+  BvshopLogistic,
+  BvshopOrderResult,
+  BvshopPayment,
+} from "@optical/shared";
 
 type BvshopMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
 
@@ -77,19 +84,37 @@ export interface BvshopOrderCreatePayload {
   customizeSales?: Array<{ name: string; price: number }>;
   cvs: { storeName: string; storeNum: string };
   customerRemark?: string;
+  deposit?: number;
 }
 
 export const bvshopClient = {
   getCustomer(env: Env, id: string | number) {
-    return bvshopRequest<{ data: any }>(env, "GET", `/customers/${id}`);
+    return bvshopRequest<{ data: BvshopCustomerListItem }>(env, "GET", `/customers/${id}`);
+  },
+
+  listCustomers(
+    env: Env,
+    params: {
+      phone?: string;
+      email?: string;
+      dealerCode?: string;
+      page?: number;
+      limit?: number;
+    }
+  ) {
+    return bvshopRequest<{ data: BvshopCustomerListItem[]; meta: BvshopListMeta }>(
+      env,
+      "GET",
+      `/customers${toQuery(params)}`
+    );
   },
 
   createCustomer(env: Env, payload: BvshopCustomerPayload) {
-    return bvshopRequest<{ data: any }>(env, "POST", "/customers", payload);
+    return bvshopRequest<{ data: BvshopCustomerListItem }>(env, "POST", "/customers", payload);
   },
 
   updateCustomer(env: Env, id: string | number, payload: Partial<BvshopCustomerPayload>) {
-    return bvshopRequest<{ data: any }>(env, "PUT", `/customers/${id}`, payload);
+    return bvshopRequest<{ data: BvshopCustomerListItem }>(env, "PUT", `/customers/${id}`, payload);
   },
 
   listOrders(
@@ -114,8 +139,16 @@ export const bvshopClient = {
     return bvshopRequest<{ data: any }>(env, "GET", `/orders/${id}`);
   },
 
+  listPayments(env: Env) {
+    return bvshopRequest<{ data: BvshopPayment[] }>(env, "GET", "/payments");
+  },
+
+  listLogistics(env: Env) {
+    return bvshopRequest<{ data: BvshopLogistic[] }>(env, "GET", "/logistics");
+  },
+
   createOrder(env: Env, payload: BvshopOrderCreatePayload) {
-    return bvshopRequest<{ data: any }>(env, "POST", "/orders", payload);
+    return bvshopRequest<{ data: BvshopOrderResult }>(env, "POST", "/orders", payload);
   },
 
   updateOrderRemark(env: Env, id: string | number, remark: string) {

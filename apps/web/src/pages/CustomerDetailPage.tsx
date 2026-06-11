@@ -93,7 +93,7 @@ export default function CustomerDetailPage() {
           <h1>{c?.full_name || `顧客 ${customerId}`}</h1>
           <div className="page-header-actions">
             <Link className="btn btn-primary" to={`/customers/${customerId}/optometry/new`}>
-              ＋ 新增驗光
+              新增驗光
             </Link>
           </div>
         </div>
@@ -102,7 +102,7 @@ export default function CustomerDetailPage() {
       {/* Customer info card */}
       <div className="card" style={{ marginBottom: "var(--space-5)" }}>
         <div className="card-header">
-          <div className="card-title">👤 顧客基本資料</div>
+          <div className="card-title">顧客基本資料</div>
           {c && (
             <span style={{ fontSize: "var(--text-xs)", color: "var(--color-slate-400)" }}>
               上次同步：{new Date(c.updated_at).toLocaleString("zh-TW")}
@@ -145,13 +145,13 @@ export default function CustomerDetailPage() {
           className={`tab-btn${activeTab === "optometry" ? " active" : ""}`}
           onClick={() => setActiveTab("optometry")}
         >
-          🔬 驗光紀錄 ({data?.optometryRecords?.length ?? 0})
+          驗光紀錄 ({data?.optometryRecords?.length ?? 0})
         </button>
         <button
           className={`tab-btn${activeTab === "glasses" ? " active" : ""}`}
           onClick={() => setActiveTab("glasses")}
         >
-          👓 配鏡紀錄 ({data?.glassesOrders?.length ?? 0})
+          配鏡紀錄 ({data?.glassesOrders?.length ?? 0})
         </button>
       </div>
 
@@ -160,12 +160,11 @@ export default function CustomerDetailPage() {
         <div className="card">
           {!data?.optometryRecords?.length ? (
             <EmptyState
-              icon="🔬"
               title="尚無驗光紀錄"
               description="點擊「新增驗光」開始建立驗光資料"
               action={
                 <Link className="btn btn-primary" to={`/customers/${customerId}/optometry/new`}>
-                  ＋ 新增驗光
+                  新增驗光
                 </Link>
               }
             />
@@ -218,7 +217,6 @@ export default function CustomerDetailPage() {
         <div className="card">
           {!data?.glassesOrders?.length ? (
             <EmptyState
-              icon="👓"
               title="尚無配鏡紀錄"
               description="請先建立驗光紀錄，再由驗光建立配鏡"
             />

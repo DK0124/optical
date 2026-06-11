@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import { glassesOrderInputSchema } from "@optical/shared";
+import { createBvshopOrderInputSchema, glassesOrderInputSchema } from "@optical/shared";
 import type { Env, AppVariables } from "../types";
 import { nowIso, randomId } from "../server/id";
 import { logAudit } from "../server/audit";
@@ -116,43 +116,73 @@ glassesOrderRoutes.get("/glasses-orders/:id/order-note", async (c) => {
   return c.json({ remark: buildBvshopOrderRemark(order) });
 });
 
-function buildBvshopCreateOrderPayload(c: any, order: any) {
+function normalizeInt(input: string | undefined, fallback: number) {
+  const parsed = Number(input);
+  if (!Number.isFinite(parsed) || parsed <= 0) return fallback;
+  return parsed;
+}
+
+function buildBvshopCreateOrderPayload(
+  c: any,
+  order: any,
+  options?: {
+    paymentId?: number;
+    logisticId?: number;
+    cvs?: { storeName: string; storeNum: string };
+    deposit?: number;
+  }
+) {
   const remark = buildBvshopOrderRemark(order);
   const framePrice = Number(order.frame_price || 0);
   const lensPrice = Number(order.lens_price || 0);
+  const paymentId = options?.paymentId ?? normalizeInt(c.env.DEFAULT_PAYMENT_ID, 1);
+  const logisticId = options?.logisticId ?? normalizeInt(c.env.DEFAULT_LOGISTIC_ID, 1);
+  const frameName = ["鏡框", order.frame_brand, order.frame_model].filter(Boolean).join(" ");
+  const lensName = ["鏡片", order.lens_index, order.lens_design, order.lens_type].filter(Boolean).join(" ");
 
   return {
     customerId: Number(order.bvshop_customer_id),
-    paymentId: Number(c.env.DEFAULT_PAYMENT_ID || 1),
-    logisticId: Number(c.env.DEFAULT_LOGISTIC_ID || 1),
+    paymentId,
+    logisticId,
     remark,
     customizeItems: [
       {
-        name: ["鏡框", order.frame_brand, order.frame_model].filter(Boolean).join(" "),
+        name: frameName || "鏡框",
         quantity: 1,
         price: framePrice
       },
       {
-        name: ["鏡片", order.lens_index, order.lens_design, order.lens_type].filter(Boolean).join(" "),
+        name: lensName || "鏡片",
         quantity: 1,
         price: lensPrice
       }
-    ].filter((item) => item.name.trim() && item.price >= 0),
+    ],
     customizeSales: order.discount ? [{ name: "配鏡折扣", price: Number(order.discount) }] : [],
-    cvs: {
+    deposit: options?.deposit ?? Number(order.deposit || 0),
+    cvs: options?.cvs || {
       storeName: c.env.DEFAULT_CVS_STORE_NAME || "門市自取",
-      storeNum: c.env.DEFAULT_CVS_STORE_NUM || "0000"
-    }
+      storeNum: c.env.DEFAULT_CVS_STORE_NUM || "0000",
+    },
   };
 }
 
 glassesOrderRoutes.get("/glasses-orders/:id/bvshop-payload-preview", async (c) => {
   const order: any = await getGlassesOrder(c, c.req.param("id"));
   if (!order) return c.json({ message: "找不到配鏡紀錄" }, 404);
+  const paymentId = c.req.query("paymentId");
+  const logisticId = c.req.query("logisticId");
+  const storeName = c.req.query("storeName");
+  const storeNum = c.req.query("storeNum");
+  const deposit = c.req.query("deposit");
 
   return c.json({
-    payload: buildBvshopCreateOrderPayload(c, order),
-    warning: "請先確認 paymentId/logisticId/cvs 設定，再建立真訂單。第一階段僅供預覽，需人工確認 payment/logistic/cvs。"
+    payload: buildBvshopCreateOrderPayload(c, order, {
+      paymentId: paymentId ? Number(paymentId) : undefined,
+      logisticId: logisticId ? Number(logisticId) : undefined,
+      cvs: storeName && storeNum ? { storeName, storeNum } : undefined,
+      deposit: deposit ? Number(deposit) : undefined
+    }),
+    warning: "請先確認 paymentId/logisticId/cvs 設定，再建立真訂單。"
   });
 });
 
@@ -169,7 +199,23 @@ glassesOrderRoutes.post("/glasses-orders/:id/create-bvshop-order", async (c) => 
   const order: any = await getGlassesOrder(c, c.req.param("id"));
   if (!order) return c.json({ message: "找不到配鏡紀錄" }, 404);
 
-  const payload = buildBvshopCreateOrderPayload(c, order);
+  const body = await c.req.json();
+  const parsed = createBvshopOrderInputSchema.safeParse(body);
+  if (!parsed.success) {
+    return c.json({ message: "建單參數格式錯誤", errors: parsed.error.flatten() }, 422);
+  }
+
+  const payload = buildBvshopCreateOrderPayload(c, order, {
+    paymentId: parsed.data.paymentId,
+    logisticId: parsed.data.logisticId,
+    cvs: parsed.data.cvs,
+    deposit: parsed.data.deposit
+  });
+
+  if (!parsed.data.paymentId || !parsed.data.logisticId) {
+    return c.json({ message: "請先選擇付款方式與物流方式。" }, 422);
+  }
+
   const bvRes = await bvshopClient.createOrder(c.env, payload);
 
   await c.env.DB.prepare(
@@ -183,9 +229,47 @@ glassesOrderRoutes.post("/glasses-orders/:id/create-bvshop-order", async (c) => 
     action: "bvshop.order.create",
     targetType: "glasses_order",
     targetId: order.id,
-    before: { id: order.id, bvshop_order_id: order.bvshop_order_id },
-    after: { bvshop_order_id: bvRes.data.id, bvshop_order_uid: bvRes.data.uid }
+    before: { id: order.id, bvshop_order_id: order.bvshop_order_id, bvshop_order_uid: order.bvshop_order_uid },
+    after: {
+      bvshop_order_id: String(bvRes.data.id),
+      bvshop_order_uid: bvRes.data.uid || null,
+      order_status: bvRes.data.orderStatus || null
+    }
   });
 
-  return c.json({ data: bvRes.data });
+  return c.json({
+    data: {
+      id: bvRes.data.id,
+      uid: bvRes.data.uid,
+      orderStatus: bvRes.data.orderStatus,
+      paymentStatus: bvRes.data.paymentStatus,
+      checkoutUrl: bvRes.data.checkoutUrl || null
+    }
+  });
+});
+
+glassesOrderRoutes.get("/bvshop/payments", async (c) => {
+  try {
+    const res = await bvshopClient.listPayments(c.env);
+    return c.json(res);
+  } catch (err) {
+    const e = err as Error;
+    if (e.message?.includes("not configured")) {
+      return c.json({ data: [], message: "BVSHOP API 尚未設定，無法取得付款方式。" });
+    }
+    return c.json({ data: [], message: "取得付款方式失敗。" }, 502);
+  }
+});
+
+glassesOrderRoutes.get("/bvshop/logistics", async (c) => {
+  try {
+    const res = await bvshopClient.listLogistics(c.env);
+    return c.json(res);
+  } catch (err) {
+    const e = err as Error;
+    if (e.message?.includes("not configured")) {
+      return c.json({ data: [], message: "BVSHOP API 尚未設定，無法取得物流方式。" });
+    }
+    return c.json({ data: [], message: "取得物流方式失敗。" }, 502);
+  }
 });

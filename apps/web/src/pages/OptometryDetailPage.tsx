@@ -225,10 +225,13 @@ export default function OptometryDetailPage() {
             {!editing ? (
               <>
                 <button className="btn btn-secondary" onClick={() => setEditing(true)}>
-                  ✏️ 編輯
+                  編輯
+                </button>
+                <button className="btn btn-secondary" onClick={() => window.open(`/print/optometry/${record.id}`, "_blank")}>
+                  列印驗光單
                 </button>
                 <Link className="btn btn-primary" to={`/optometry/${id}/create-glasses-order`}>
-                  👓 由此配鏡
+                  由此配鏡
                 </Link>
               </>
             ) : (
@@ -237,7 +240,7 @@ export default function OptometryDetailPage() {
                   取消
                 </button>
                 <button className="btn btn-primary" onClick={save} disabled={saving}>
-                  {saving ? <><span className="spinner" style={{ width: 14, height: 14 }} /> 儲存中</> : "✅ 儲存"}
+                  {saving ? <><span className="spinner" style={{ width: 14, height: 14 }} /> 儲存中</> : "儲存"}
                 </button>
               </>
             )}
@@ -318,8 +321,8 @@ export default function OptometryDetailPage() {
 
       {/* Eyes */}
       <div className="eyes-grid" style={{ marginBottom: "var(--space-5)" }}>
-        <EyeRow label="👁️ 右眼 OD" side="right" />
-        <EyeRow label="👁️ 左眼 OS" side="left" />
+        <EyeRow label="右眼 OD" side="right" />
+        <EyeRow label="左眼 OS" side="left" />
       </div>
 
       {/* Note */}
@@ -344,11 +347,11 @@ export default function OptometryDetailPage() {
       {/* Footer */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <button className="btn btn-ghost" onClick={() => navigate(-1)}>
-          ← 返回
+          返回
         </button>
         {!editing && (
           <Link className="btn btn-primary" to={`/optometry/${id}/create-glasses-order`}>
-            👓 由此驗光建立配鏡
+            由此驗光建立配鏡
           </Link>
         )}
       </div>

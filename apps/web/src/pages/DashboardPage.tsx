@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { apiGet } from "../api/client";
 import { ApiStatusBadge } from "../components/Badge";
+import { ClipboardIcon, SearchIcon } from "../components/icons/LineIcons";
 
 interface HealthResponse {
   ok: boolean;
@@ -53,18 +54,18 @@ export default function DashboardPage() {
               (e.currentTarget as HTMLDivElement).style.transform = "";
             }}
           >
-            <div style={{ fontSize: "2.5rem", marginBottom: "var(--space-3)" }}>🔍</div>
+            <div style={{ marginBottom: "var(--space-3)", color: "var(--color-primary-700)" }}><SearchIcon size={24} /></div>
             <div style={{ fontSize: "var(--text-lg)", fontWeight: 700, color: "var(--color-slate-800)", marginBottom: "var(--space-2)" }}>
               查詢顧客
             </div>
             <div style={{ fontSize: "var(--text-sm)", color: "var(--color-slate-500)" }}>
-              輸入 BVSHOP 顧客 ID 查詢顧客資料、驗光歷史、配鏡記錄
+              輸入電話 / 姓名 / Email 查詢顧客資料、驗光歷史、配鏡記錄
             </div>
           </div>
         </Link>
 
         <div className="card" style={{ borderLeft: "4px solid var(--color-success-500)", opacity: 0.7 }}>
-          <div style={{ fontSize: "2.5rem", marginBottom: "var(--space-3)" }}>📋</div>
+          <div style={{ marginBottom: "var(--space-3)", color: "var(--color-slate-700)" }}><ClipboardIcon size={24} /></div>
           <div style={{ fontSize: "var(--text-lg)", fontWeight: 700, color: "var(--color-slate-800)", marginBottom: "var(--space-2)" }}>
             近期配鏡
           </div>
@@ -78,14 +79,14 @@ export default function DashboardPage() {
       <div className="card">
         <div className="card-header">
           <div>
-            <div className="card-title">📌 第一階段操作流程</div>
+            <div className="card-title">第二階段操作流程</div>
             <div className="card-subtitle">依照以下步驟完成驗光配鏡作業</div>
           </div>
         </div>
         <div className="card-body">
           <ol style={{ paddingLeft: "var(--space-5)", display: "flex", flexDirection: "column", gap: "var(--space-3)" }}>
             {[
-              { step: "查詢 BVSHOP 顧客", desc: "輸入 BVSHOP 顧客 ID，同步快照至本系統" },
+              { step: "查詢 BVSHOP 顧客", desc: "輸入電話 / 姓名 / Email，同步快照至本系統" },
               { step: "新增驗光紀錄", desc: "輸入左右眼度數、PD、主視眼、用途等完整資料" },
               { step: "由驗光建立配鏡", desc: "選擇驗光紀錄，填入鏡框鏡片資料及金額" },
               { step: "複製 BVSHOP 訂單備註", desc: "系統自動產生符合規格的備註，手動貼至 BVSHOP 訂單" },
@@ -107,7 +108,7 @@ export default function DashboardPage() {
           )}
           {healthError && (
             <div className="alert alert-warning" style={{ marginBottom: 0 }}>
-              ⚠️ 無法連線到後端 API。請確認 <code>pnpm dev:api</code> 已啟動（port 8787）。
+              無法連線到後端 API。請確認 <code>pnpm dev:api</code> 已啟動（port 8787）。
             </div>
           )}
         </div>

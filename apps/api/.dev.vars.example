@@ -1,3 +1,5 @@
+# dev: https://bvshop-manage.bv-shop.tw/api/v2
+# prod: https://bvshop-manage.bvshop.tw/api/v2
 BVSHOP_API_BASE_URL=https://YOUR_BVSHOP_API_BASE_URL/api/v2
 BVSHOP_API_TOKEN=PASTE_YOUR_TOKEN_HERE
 DEFAULT_COMPANY_ID=COMPANY_DEFAULT

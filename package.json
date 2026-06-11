@@ -1,0 +1,14 @@
+{
+  "name": "optical",
+  "private": true,
+  "version": "0.1.0",
+  "scripts": {
+    "dev:web": "pnpm --filter @optical/web dev",
+    "dev:api": "pnpm --filter @optical/api dev",
+    "typecheck": "pnpm -r typecheck",
+    "build": "pnpm -r build"
+  },
+  "devDependencies": {
+    "typescript": "^5.8.0"
+  }
+}

@@ -1,0 +1,15 @@
+name = "optical-api"
+main = "src/index.ts"
+compatibility_date = "2026-06-11"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "optical-mvp"
+database_id = "REPLACE_WITH_D1_DATABASE_ID"
+
+[vars]
+DEFAULT_COMPANY_ID = "COMPANY_DEFAULT"
+DEFAULT_PAYMENT_ID = "1"
+DEFAULT_LOGISTIC_ID = "1"
+DEFAULT_CVS_STORE_NAME = "門市自取"
+DEFAULT_CVS_STORE_NUM = "0000"

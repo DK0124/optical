@@ -114,3 +114,33 @@
 - 未在 console log 完整顧客電話、email、驗光資料
 - 未在 localStorage/sessionStorage 存 token 或敏感資料
 - 所有寫入操作均有 audit_logs 記錄
+
+---
+
+## [清理與修正] - 2026-06-11
+
+### 停止追蹤 node_modules
+
+**新增檔案：**
+- `.gitignore`：涵蓋 `node_modules/`、`.pnpm-store/`、建置產物（`dist/`、`.wrangler/`、`*.tsbuildinfo`）、機密本機設定（`.dev.vars`、`wrangler.toml`）、系統與編輯器暫存檔（`.DS_Store`、`*.log`）。`*.example` 範本與 `pnpm-lock.yaml` 維持入庫。
+
+**解除追蹤：**
+- 使用 `git rm -r --cached` 將以下目錄從 git index 移除（保留本機檔案）：
+  - `node_modules/`
+  - `apps/api/node_modules/`
+  - `apps/web/node_modules/`
+  - `packages/shared/node_modules/`
+- PR diff 不再包含任何 `node_modules/` 路徑下的檔案。
+
+### 移除沙箱安裝繞道設定
+
+**刪除檔案：**
+- `.pnpmfile.cjs`：內容僅為 `readPackage` 原樣回傳的空 hook，無實際作用，刪除。
+
+**修改檔案：**
+- `.npmrc`：移除 `ignore-scripts=true`（此設定會導致 `wrangler`、`vite`、`esbuild`、`workerd` 等需要 postinstall 的套件在乾淨環境裝不起來）。保留 `auto-install-peers=true`。
+
+### 修正 GlassesOrderDetailPage CSS bug
+
+**修改檔案：**
+- `apps/web/src/pages/GlassesOrderDetailPage.tsx`：將 collapsible-header inline style 的 `margin: "-var(--space-6)"` 改為 `margin: "calc(-1 * var(--space-6))"`。React inline style 不支援 `-var(...)` 負號直接接 `var()` 的寫法，原本會被瀏覽器忽略。

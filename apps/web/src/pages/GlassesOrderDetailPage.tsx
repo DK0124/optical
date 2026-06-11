@@ -301,7 +301,7 @@ export default function GlassesOrderDetailPage() {
             if (!showPayload && !payload) loadPayload();
             else setShowPayload((v) => !v);
           }}
-          style={{ margin: "-var(--space-6)", borderRadius: "var(--radius-md)" }}
+          style={{ margin: "calc(-1 * var(--space-6))", borderRadius: "var(--radius-md)" }}
         >
           <span className="collapsible-title">
             🔍 建單 Payload 預覽（POST /orders）

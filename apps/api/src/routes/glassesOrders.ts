@@ -152,11 +152,20 @@ glassesOrderRoutes.get("/glasses-orders/:id/bvshop-payload-preview", async (c) =
 
   return c.json({
     payload: buildBvshopCreateOrderPayload(c, order),
-    warning: "請先確認 paymentId/logisticId/cvs 設定，再建立真訂單。"
+    warning: "請先確認 paymentId/logisticId/cvs 設定，再建立真訂單。第一階段僅供預覽，需人工確認 payment/logistic/cvs。"
   });
 });
 
 glassesOrderRoutes.post("/glasses-orders/:id/create-bvshop-order", async (c) => {
+  // 第二階段功能：需設定 ENABLE_REAL_ORDER=true 才能啟用。
+  const enableRealOrder = c.env.ENABLE_REAL_ORDER === "true";
+  if (!enableRealOrder) {
+    return c.json(
+      { message: "真建單尚未啟用，請先確認 payment/logistic/cvs 設定並將 ENABLE_REAL_ORDER 設為 true" },
+      403
+    );
+  }
+
   const order: any = await getGlassesOrder(c, c.req.param("id"));
   if (!order) return c.json({ message: "找不到配鏡紀錄" }, 404);
 
@@ -174,8 +183,8 @@ glassesOrderRoutes.post("/glasses-orders/:id/create-bvshop-order", async (c) => 
     action: "bvshop.order.create",
     targetType: "glasses_order",
     targetId: order.id,
-    before: order,
-    after: bvRes.data
+    before: { id: order.id, bvshop_order_id: order.bvshop_order_id },
+    after: { bvshop_order_id: bvRes.data.id, bvshop_order_uid: bvRes.data.uid }
   });
 
   return c.json({ data: bvRes.data });

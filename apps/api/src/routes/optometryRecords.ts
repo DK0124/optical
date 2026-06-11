@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import { optometryRecordInputSchema } from "@optical/shared";
+import { optometryRecordInputSchema, optometryRecordPatchSchema } from "@optical/shared";
 import type { Env, AppVariables } from "../types";
 import { nowIso, randomId } from "../server/id";
 import { logAudit } from "../server/audit";
@@ -104,23 +104,61 @@ optometryRoutes.get("/optometry-records/:id", async (c) => {
 });
 
 optometryRoutes.patch("/optometry-records/:id", async (c) => {
-  // MVP：先保守處理，只允許更新 note/status。後續請 Copilot 擴充完整欄位更新。
   const companyId = c.get("companyId");
   const id = c.req.param("id");
   const body = await c.req.json();
+
+  const parsed = optometryRecordPatchSchema.safeParse(body);
+  if (!parsed.success) {
+    return c.json({ message: "驗光資料格式錯誤", errors: parsed.error.flatten() }, 422);
+  }
 
   const before = await c.env.DB.prepare(
     `SELECT * FROM optometry_records WHERE company_id = ? AND id = ?`
   )
     .bind(companyId, id)
-    .first();
+    .first() as Record<string, unknown> | null;
 
   if (!before) return c.json({ message: "找不到驗光紀錄" }, 404);
 
+  const p = parsed.data;
+  const now = nowIso();
+
   await c.env.DB.prepare(
-    `UPDATE optometry_records SET note = ?, status = ?, updated_at = ? WHERE company_id = ? AND id = ?`
+    `UPDATE optometry_records SET
+      exam_date = ?, staff_name = ?,
+      dominant_eye = ?, purpose = ?,
+      right_sph = ?, right_cyl = ?, right_axis = ?, right_add = ?, right_va = ?, right_pd = ?, right_prism = ?,
+      left_sph = ?, left_cyl = ?, left_axis = ?, left_add = ?, left_va = ?, left_pd = ?, left_prism = ?,
+      note = ?, status = ?,
+      updated_at = ?
+    WHERE company_id = ? AND id = ?`
   )
-    .bind(body.note ?? (before as any).note, body.status ?? (before as any).status, nowIso(), companyId, id)
+    .bind(
+      p.examDate ?? before.exam_date,
+      p.staffName !== undefined ? p.staffName : before.staff_name,
+      p.dominantEye ?? before.dominant_eye,
+      p.purpose ?? before.purpose,
+      p.right?.sph !== undefined ? p.right.sph : before.right_sph,
+      p.right?.cyl !== undefined ? p.right.cyl : before.right_cyl,
+      p.right?.axis !== undefined ? p.right.axis : before.right_axis,
+      p.right?.add !== undefined ? p.right.add : before.right_add,
+      p.right?.va !== undefined ? p.right.va : before.right_va,
+      p.right?.pd !== undefined ? p.right.pd : before.right_pd,
+      p.right?.prism !== undefined ? p.right.prism : before.right_prism,
+      p.left?.sph !== undefined ? p.left.sph : before.left_sph,
+      p.left?.cyl !== undefined ? p.left.cyl : before.left_cyl,
+      p.left?.axis !== undefined ? p.left.axis : before.left_axis,
+      p.left?.add !== undefined ? p.left.add : before.left_add,
+      p.left?.va !== undefined ? p.left.va : before.left_va,
+      p.left?.pd !== undefined ? p.left.pd : before.left_pd,
+      p.left?.prism !== undefined ? p.left.prism : before.left_prism,
+      p.note !== undefined ? p.note : before.note,
+      p.status ?? before.status,
+      now,
+      companyId,
+      id
+    )
     .run();
 
   const after = await c.env.DB.prepare(

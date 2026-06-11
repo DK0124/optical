@@ -1,5 +1,15 @@
 import { z } from "zod";
 
+export const bvshopCustomerInputSchema = z.object({
+  phone: z.string().min(1, "電話為必填"),
+  fullName: z.string().min(1, "姓名為必填"),
+  email: z.string().email("Email 格式錯誤"),
+  address: z.string().min(1, "地址為必填"),
+  dealerCode: z.string().nullable().optional(),
+});
+
+export type BvshopCustomerInput = z.infer<typeof bvshopCustomerInputSchema>;
+
 export const eyePrescriptionSchema = z.object({
   sph: z.number().nullable().optional(),
   cyl: z.number().nullable().optional(),
@@ -53,4 +63,15 @@ export const glassesOrderInputSchema = z.object({
     balance: z.number().int().nullable().optional()
   }),
   note: z.string().nullable().optional()
+});
+
+export const optometryRecordPatchSchema = z.object({
+  examDate: z.string().min(1).optional(),
+  staffName: z.string().nullable().optional(),
+  dominantEye: z.enum(["right", "left", "unknown"]).optional(),
+  purpose: z.enum(["daily", "driving", "reading", "computer", "sport", "other"]).optional(),
+  right: eyePrescriptionSchema.optional(),
+  left: eyePrescriptionSchema.optional(),
+  note: z.string().nullable().optional(),
+  status: z.enum(["active", "archived"]).optional(),
 });

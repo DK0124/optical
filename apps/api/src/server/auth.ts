@@ -13,6 +13,12 @@ export async function authMiddleware(c: AppContext, next: Next) {
     c.req.header("x-dev-user-email") ||
     null;
 
+  // 當 REQUIRE_AUTH=true 且未取得使用者 email 時，回傳 401（/api/health 不受限）。
+  const requireAuth = c.env.REQUIRE_AUTH === "true";
+  if (requireAuth && !accessEmail && !c.req.path.endsWith("/health")) {
+    return c.json({ message: "未授權" }, 401);
+  }
+
   c.set("companyId", companyId);
   c.set("userEmail", accessEmail);
   c.set("userId", accessEmail);

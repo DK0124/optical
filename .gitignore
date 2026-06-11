@@ -1,0 +1,18 @@
+# 依賴
+node_modules/
+.pnpm-store/
+
+# 建置產物
+dist/
+.wrangler/
+*.tsbuildinfo
+
+# 機密 / 本機設定（README 已警告不可提交）
+.dev.vars
+apps/api/.dev.vars
+wrangler.toml
+apps/api/wrangler.toml
+
+# 系統 / 編輯器
+.DS_Store
+*.log

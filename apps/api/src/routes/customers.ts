@@ -1,7 +1,8 @@
 import { Hono } from "hono";
+import { bvshopCustomerInputSchema } from "@optical/shared";
 import type { Env, AppVariables } from "../types";
 import { bvshopClient } from "../server/bvshopClient";
-import { nowIso, randomId } from "../server/id";
+import { nowIso } from "../server/id";
 import { logAudit } from "../server/audit";
 
 export const customerRoutes = new Hono<{ Bindings: Env; Variables: AppVariables }>();
@@ -53,14 +54,25 @@ customerRoutes.get("/customers/search", async (c) => {
     return c.json({ data: [], message: "請輸入 BVSHOP 顧客 ID。MVP 先支援用 ID 查詢。" });
   }
 
-  // MVP：先假設 q 是 BVSHOP 顧客 ID。
-  const res = await bvshopClient.getCustomer(c.env, q);
-  await upsertCustomerSnapshot(c, res.data);
-
-  return c.json({
-    data: [res.data],
-    mode: "id"
-  });
+  try {
+    // MVP：先假設 q 是 BVSHOP 顧客 ID。
+    const res = await bvshopClient.getCustomer(c.env, q);
+    if (!res.data) {
+      return c.json({ data: [], message: "查無顧客" });
+    }
+    await upsertCustomerSnapshot(c, res.data);
+    return c.json({ data: [res.data], mode: "id" });
+  } catch (err) {
+    const e = err as Error & { status?: number };
+    if (e.status === 404) {
+      return c.json({ data: [], message: "查無此顧客" });
+    }
+    // BVSHOP 未設定時給友善訊息
+    if (e.message?.includes("not configured")) {
+      return c.json({ data: [], message: "BVSHOP API 尚未設定，無法查詢顧客。" });
+    }
+    return c.json({ data: [], message: e.message || "查詢失敗，請稍後再試。" });
+  }
 });
 
 customerRoutes.get("/customers/:bvshopCustomerId", async (c) => {
@@ -97,16 +109,30 @@ customerRoutes.get("/customers/:bvshopCustomerId", async (c) => {
 });
 
 customerRoutes.post("/customers", async (c) => {
-  const payload = await c.req.json();
-  const res = await bvshopClient.createCustomer(c.env, payload);
-  await upsertCustomerSnapshot(c, res.data);
+  const body = await c.req.json();
+  const parsed = bvshopCustomerInputSchema.safeParse(body);
 
-  await logAudit(c, {
-    action: "bvshop.customer.create",
-    targetType: "bvshop_customer",
-    targetId: String(res.data.id),
-    after: res.data
-  });
+  if (!parsed.success) {
+    return c.json({ message: "顧客資料格式錯誤", errors: parsed.error.flatten() }, 422);
+  }
 
-  return c.json(res);
+  try {
+    const res = await bvshopClient.createCustomer(c.env, parsed.data);
+    await upsertCustomerSnapshot(c, res.data);
+
+    await logAudit(c, {
+      action: "bvshop.customer.create",
+      targetType: "bvshop_customer",
+      targetId: String(res.data.id),
+      after: { id: res.data.id, fullName: res.data.fullName }
+    });
+
+    return c.json(res);
+  } catch (err) {
+    const e = err as Error & { status?: number };
+    if (e.message?.includes("not configured")) {
+      return c.json({ message: "BVSHOP API 尚未設定，無法建立顧客。" }, 503);
+    }
+    return c.json({ message: e.message || "建立顧客失敗" }, (e.status as 400 | 422 | 503) || 500);
+  }
 });

@@ -30,10 +30,10 @@ export function useToast() {
 }
 
 const ICONS: Record<ToastType, string> = {
-  success: "●",
-  error: "●",
-  warning: "●",
-  info: "●",
+  success: "✓",
+  error: "×",
+  warning: "!",
+  info: "i",
 };
 
 export function ToastProvider({ children }: { children: React.ReactNode }) {

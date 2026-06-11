@@ -116,9 +116,9 @@ glassesOrderRoutes.get("/glasses-orders/:id/order-note", async (c) => {
   return c.json({ remark: buildBvshopOrderRemark(order) });
 });
 
-function normalizeInt(input: string | undefined, fallback: number) {
+function parsePositiveInt(input: string | undefined, fallback: number) {
   const parsed = Number(input);
-  if (!Number.isFinite(parsed) || parsed <= 0) return fallback;
+  if (!Number.isFinite(parsed) || !Number.isInteger(parsed) || parsed <= 0) return fallback;
   return parsed;
 }
 
@@ -135,8 +135,8 @@ function buildBvshopCreateOrderPayload(
   const remark = buildBvshopOrderRemark(order);
   const framePrice = Number(order.frame_price || 0);
   const lensPrice = Number(order.lens_price || 0);
-  const paymentId = options?.paymentId ?? normalizeInt(c.env.DEFAULT_PAYMENT_ID, 1);
-  const logisticId = options?.logisticId ?? normalizeInt(c.env.DEFAULT_LOGISTIC_ID, 1);
+  const paymentId = options?.paymentId ?? parsePositiveInt(c.env.DEFAULT_PAYMENT_ID, 1);
+  const logisticId = options?.logisticId ?? parsePositiveInt(c.env.DEFAULT_LOGISTIC_ID, 1);
   const frameName = ["鏡框", order.frame_brand, order.frame_model].filter(Boolean).join(" ");
   const lensName = ["鏡片", order.lens_index, order.lens_design, order.lens_type].filter(Boolean).join(" ");
 

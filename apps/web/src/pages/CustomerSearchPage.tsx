@@ -14,12 +14,17 @@ interface SearchResult {
 
 function maskPhone(phone: string) {
   if (!phone) return "—";
-  return phone.replace(/(\d{4})\d+(\d{3})/, "$1***$2");
+  const digits = phone.replace(/\D/g, "");
+  if (digits.length <= 2) return "***";
+  if (digits.length < 7) return `${digits.slice(0, 2)}***`;
+  return `${digits.slice(0, 4)}***${digits.slice(-3)}`;
 }
 
 function maskEmail(email: string) {
   if (!email) return "—";
-  const [local, domain] = email.split("@");
+  const parts = email.split("@");
+  if (parts.length !== 2) return "—";
+  const [local, domain] = parts;
   if (!local || !domain) return "—";
   return `${local.slice(0, 1)}***@${domain}`;
 }

@@ -7,6 +7,8 @@ export interface Env {
   DEFAULT_LOGISTIC_ID?: string;
   DEFAULT_CVS_STORE_NAME?: string;
   DEFAULT_CVS_STORE_NUM?: string;
+  REQUIRE_AUTH?: string;
+  ENABLE_REAL_ORDER?: string;
 }
 
 export type AppVariables = {

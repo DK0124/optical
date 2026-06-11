@@ -13,3 +13,7 @@ DEFAULT_PAYMENT_ID = "1"
 DEFAULT_LOGISTIC_ID = "1"
 DEFAULT_CVS_STORE_NAME = "門市自取"
 DEFAULT_CVS_STORE_NUM = "0000"
+# 設為 "true" 時，未帶 x-dev-user-email / Cloudflare Access header 的請求會被擋 401（/api/health 例外）
+REQUIRE_AUTH = "false"
+# 設為 "true" 時，才允許呼叫 BVSHOP 真建單 API；預設關閉以防誤觸
+ENABLE_REAL_ORDER = "false"

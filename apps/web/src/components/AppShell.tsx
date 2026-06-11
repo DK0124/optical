@@ -1,9 +1,10 @@
 import { Link, useLocation } from "react-router-dom";
 import { useState } from "react";
+import { GlassesIcon, HomeIcon, MenuIcon, SearchIcon } from "./icons/LineIcons";
 
 const NAV_ITEMS = [
-  { to: "/", icon: "🏠", label: "儀表板" },
-  { to: "/customers/search", icon: "🔍", label: "查詢顧客" },
+  { to: "/", icon: <HomeIcon size={16} />, label: "儀表板" },
+  { to: "/customers/search", icon: <SearchIcon size={16} />, label: "查詢顧客" },
 ];
 
 export function AppShell({ children }: { children: React.ReactNode }) {
@@ -37,10 +38,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       {/* Sidebar */}
       <aside className={`sidebar${sidebarOpen ? " open" : ""}`}>
         <div className="sidebar-brand">
-          <div className="sidebar-brand-icon">👓</div>
+          <div className="sidebar-brand-icon"><GlassesIcon size={18} /></div>
           <div className="sidebar-brand-text">
             <div className="sidebar-brand-name">眼鏡行管理系統</div>
-            <div className="sidebar-brand-sub">BVSHOP MVP</div>
+            <div className="sidebar-brand-sub">BVSHOP 配鏡平台</div>
           </div>
         </div>
 
@@ -62,7 +63,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </nav>
 
         <div className="sidebar-footer">
-          第一階段 MVP · {new Date().getFullYear()}
+          Optical Workspace · {new Date().getFullYear()}
         </div>
       </aside>
 
@@ -75,7 +76,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               onClick={() => setSidebarOpen((v) => !v)}
               aria-label="開關側邊欄"
             >
-              ☰
+              <MenuIcon size={18} />
             </button>
             <span className="topbar-title">BVSHOP 眼鏡行驗光配鏡管理系統</span>
           </div>

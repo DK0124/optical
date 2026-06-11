@@ -75,3 +75,16 @@ export const optometryRecordPatchSchema = z.object({
   note: z.string().nullable().optional(),
   status: z.enum(["active", "archived"]).optional(),
 });
+
+export const createBvshopOrderInputSchema = z.object({
+  paymentId: z.number().int().positive(),
+  logisticId: z.number().int().positive(),
+  cvs: z
+    .object({
+      storeName: z.string().min(1),
+      storeNum: z.string().min(1),
+    })
+    .optional(),
+  deposit: z.number().int().nonnegative().optional(),
+  confirm: z.literal(true),
+});

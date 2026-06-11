@@ -152,13 +152,13 @@ export default function CreateGlassesOrderPage() {
       {/* Prescription readonly */}
       <div className="card" style={{ marginBottom: "var(--space-5)" }}>
         <div className="card-header">
-          <div className="card-title">🔬 驗光度數（來源）</div>
+          <div className="card-title">驗光度數（來源）</div>
           <span style={{ fontSize: "var(--text-xs)", color: "var(--color-slate-400)" }}>唯讀，驗光日期：{record.exam_date}</span>
         </div>
         <div className="eyes-grid">
           {(["right", "left"] as const).map((side) => (
             <div key={side} className={`eye-card eye-card-${side === "right" ? "od" : "os"}`}>
-              <div className="eye-card-title">{side === "right" ? "👁️ 右眼 OD" : "👁️ 左眼 OS"}</div>
+              <div className="eye-card-title">{side === "right" ? "右眼 OD" : "左眼 OS"}</div>
               <div className="detail-grid">
                 {[
                   ["SPH", record[`${side}_sph`]],
@@ -183,7 +183,7 @@ export default function CreateGlassesOrderPage() {
       {/* Frame */}
       <div className="card" style={{ marginBottom: "var(--space-5)" }}>
         <div className="card-header">
-          <div className="card-title">🖼️ 鏡框資料</div>
+          <div className="card-title">鏡框資料</div>
         </div>
         <div className="grid-3">
           <div className="field">
@@ -212,7 +212,7 @@ export default function CreateGlassesOrderPage() {
       {/* Lens */}
       <div className="card" style={{ marginBottom: "var(--space-5)" }}>
         <div className="card-header">
-          <div className="card-title">🔭 鏡片資料</div>
+          <div className="card-title">鏡片資料</div>
         </div>
         <div className="grid-3">
           <div className="field">
@@ -264,7 +264,7 @@ export default function CreateGlassesOrderPage() {
       {/* Amount */}
       <div className="card" style={{ marginBottom: "var(--space-5)" }}>
         <div className="card-header">
-          <div className="card-title">💰 金額明細</div>
+          <div className="card-title">金額明細</div>
         </div>
         <div className="grid-2">
           <div>
@@ -326,7 +326,7 @@ export default function CreateGlassesOrderPage() {
         <button className="btn btn-primary btn-lg" onClick={submit} disabled={submitting}>
           {submitting
             ? <><span className="spinner" style={{ width: 16, height: 16 }} /> 建立中…</>
-            : "✅ 建立配鏡紀錄"}
+            : "建立配鏡紀錄"}
         </button>
       </div>
     </div>

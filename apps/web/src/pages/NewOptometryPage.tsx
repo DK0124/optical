@@ -102,7 +102,7 @@ export default function NewOptometryPage() {
     return (
       <div className={`eye-card eye-card-${variant}`}>
         <div className="eye-card-title">
-          <span>{variant === "od" ? "👁️ 右眼 OD" : "👁️ 左眼 OS"}</span>
+          <span>{variant === "od" ? "右眼 OD" : "左眼 OS"}</span>
           <span style={{ color: "var(--color-slate-400)", fontWeight: 400 }}>{label}</span>
         </div>
         <div className="field-row">
@@ -206,7 +206,7 @@ export default function NewOptometryPage() {
           取消
         </Link>
         <button className="btn btn-primary btn-lg" onClick={submit} disabled={loading}>
-          {loading ? <><span className="spinner" style={{ width: 16, height: 16 }} /> 儲存中…</> : "✅ 儲存驗光紀錄"}
+          {loading ? <><span className="spinner" style={{ width: 16, height: 16 }} /> 儲存中…</> : "儲存驗光紀錄"}
         </button>
       </div>
     </div>

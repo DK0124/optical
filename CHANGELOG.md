@@ -144,3 +144,43 @@
 
 **修改檔案：**
 - `apps/web/src/pages/GlassesOrderDetailPage.tsx`：將 collapsible-header inline style 的 `margin: "-var(--space-6)"` 改為 `margin: "calc(-1 * var(--space-6))"`。React inline style 不支援 `-var(...)` 負號直接接 `var()` 的寫法，原本會被瀏覽器忽略。
+
+---
+
+## [第二階段實作] - 2026-06-11
+
+### 1) 顧客搜尋升級（電話/姓名/Email）
+- **修改檔案**
+  - `apps/api/src/server/bvshopClient.ts`：新增 `listCustomers`
+  - `apps/api/src/routes/customers.ts`：`GET /api/customers/search` 支援 `type=auto|phone|email|name`、姓名本機 fallback、meta/source/message
+  - `apps/web/src/pages/CustomerSearchPage.tsx`：搜尋類型切換、結果表格、來源標記、遮罩顯示
+
+### 2) 真建單與付款/物流下拉
+- **修改檔案**
+  - `packages/shared/src/types.ts`、`packages/shared/src/schemas.ts`：新增 BVSHOP 型別與 `createBvshopOrderInputSchema`
+  - `apps/api/src/routes/glassesOrders.ts`：新增 `/api/bvshop/payments`、`/api/bvshop/logistics`，強化 preview/create 建單流程
+  - `apps/web/src/pages/GlassesOrderDetailPage.tsx`：付款/物流下拉、預覽、確認建單、建立成功資訊與 403 友善提示
+
+### 3) 介面專業化
+- **修改檔案**
+  - `apps/web/src/components/icons/LineIcons.tsx`（新增）
+  - `apps/web/src/components/AppShell.tsx`
+  - `apps/web/src/styles/global.css`
+  - `apps/web/src/pages/DashboardPage.tsx`
+  - `apps/web/src/pages/CustomerDetailPage.tsx`
+  - `apps/web/src/pages/NewOptometryPage.tsx`
+  - `apps/web/src/pages/CreateGlassesOrderPage.tsx`
+  - `apps/web/src/pages/OptometryDetailPage.tsx`
+
+### 4) 列印驗光單與配鏡單
+- **修改檔案**
+  - `apps/web/src/pages/PrintOptometryPage.tsx`（新增）
+  - `apps/web/src/pages/PrintGlassesOrderPage.tsx`（新增）
+  - `apps/web/src/styles/print.css`（新增）
+  - `apps/web/src/App.tsx`、`apps/web/src/main.tsx`：新增列印路由與列印樣式
+
+### 5) 設定與文件修正
+- **修改檔案**
+  - `apps/api/wrangler.toml.example`：`migrations_dir = "../../migrations"`
+  - `apps/api/.dev.vars.example`：補充 BVSHOP dev/prod base URL 註解
+  - `docs/SETUP_GUIDE.md`、`docs/MVP_TASKS.md`：同步第二階段流程與限制
